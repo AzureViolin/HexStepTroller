@@ -5,6 +5,15 @@
 #define LOW 0
 #define HIGH 1
 
+#define bit_get(p,m) ((p) & (m)) 
+#define bit_set(p,m) ((p) |= (m)) 
+#define bit_clear(p,m) ((p) &= ~(m)) 
+#define bit_flip(p,m) ((p) ^= (m)) 
+#define bit_write(c<Plug>PeepOpen,m) (c ? bit_set(p,m) : bit_clear(p,m)) 
+#define BIT(x) (0x01 << (x)) 
+#define LONGBIT(x) ((unsigned long)0x00000001 << (x))
+
+
 // struct of Stepper Motor
 struct Stepper{
 	int direction;
@@ -52,14 +61,17 @@ Stepper Left_Wrist = {
 
 
 
-// Move Stepper
+// Move Stepper. This function calls millis() and stepMotor()
 void step(Stepper stepper, int steps_to_move){
-	int steps_left = abs(steps_to_move); // how many steps to take
-
-	//determine direction
-
-	if (steps_to_move > 0) {stepper.direction = 1;}
-	if (steps_to_move < 0) {stepper.direction = 0;}
+	int steps_left = 0;
+	if (steps_to_move > 0) {
+		steps_left = steps_to_move; // how many steps to take
+		stepper.direction = 1;// determin direction
+	} 
+    else {
+		steps_left = -steps_to_move;
+		stepper.direction = 0;
+	}
 	
 	// decrease the number of steps, moving on step each time:
 	while(steps_left >0) {
@@ -94,7 +106,7 @@ void setSpeed(Stepper stepper, long whatSpeed){
 	stepper.step_delay = 60L * 1000L / stepper.number_of_steps / whatSpeed;
 }
 
-// Moves the motor by 1 step
+// Moves the motor by 1 step. calls clearPin and setPin.
 int stepMotor(Stepper stepper, int thisStep) {
   if (stepper.pin_count == 2) {
     switch (thisStep) {
@@ -153,12 +165,35 @@ void setPin(char portNum, int pinNum){
 		//PORTA 
 		case 'A':{
 			switch (pinNum){
-				case 0: PORTA_OUTSET &= 
+				case 0: bit_set(PORTA_OUTSET,BIT(0)); break; //Set PA0 = HIGH
+				case 1: bit_set(PORTA_OUTSET,BIT(1)); break;
+				case 2: bit_set(PORTA_OUTSET,BIT(2)); break;
+				case 3: bit_set(PORTA_OUTSET,BIT(3)); break;
+			}
+		break;
+		}
+	}
+}
+
+
+
 
 
 // set selected pin to 0/LOW 
-void clearPin(char portNum, int pinNum)
-
+void clearPin(char portNum, int pinNum){
+	switch (portNum){
+		//PORTA 
+		case 'A':{
+			switch (pinNum){
+				case 0: bit_set(PORTA_OUTCLR,BIT(0)); break; //Set PA0 = HIGH
+				case 1: bit_set(PORTA_OUTCLR,BIT(1)); break;
+				case 2: bit_set(PORTA_OUTCLR,BIT(2)); break;
+				case 3: bit_set(PORTA_OUTCLR,BIT(3)); break;
+			}
+		break;
+		}
+	}
+}
 // getTime
 long getTime();
 
@@ -195,7 +230,7 @@ int main(void){
 
 PORTA_DIR = 0XFF;//Set PortA to output
 
-setSpeed(Left_Wrist,40);
+setSpeed(Left_Wrist,30);
 step(Left_Wrist,50);
 while(1){
 	if(Left_Wrist.step_number=50)
